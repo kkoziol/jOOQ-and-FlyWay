@@ -12,10 +12,42 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<db.url>jdbc:h2:~/flyway-test</db.url>
+		<db.username>sa</db.username>
 	</properties>
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<version>3.0</version>
+
+				<!-- Note that we're executing the Flyway plugin in the "generate-sources" 
+					phase -->
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>migrate</goal>
+							<goal>info</goal>
+						</goals>
+					</execution>
+				</executions>
+
+				<!-- Note that we need to prefix the db/migration path with filesystem: 
+					to prevent Flyway from looking for our migration scripts only on the classpath -->
+				<configuration>
+					<url>${db.url}</url>
+					<user>${db.username}</user>
+					<locations>
+						<location>filesystem:src/main/resources/db/migration</location>
+					</locations>
+				</configuration>
+			</plugin>
+
+
 			<plugin>
 				<groupId>org.jooq</groupId>
 				<artifactId>jooq-codegen-maven</artifactId>
@@ -43,8 +75,8 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
 					<!-- JDBC connection parameters -->
 					<jdbc>
 						<driver>org.h2.Driver</driver>
-						<url>jdbc:h2:~/test</url>
-						<user>sa</user>
+						<url>${db.url}</url>
+						<user>${db.username}</user>
 						<password></password>
 					</jdbc>
 
@@ -55,7 +87,8 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
 							<name>org.jooq.util.h2.H2Database</name>
 							<includes>.*</includes>
 							<excludes></excludes>
-							<inputSchema>PUBLIC</inputSchema>
+							<inputSchema>FLYWAY_TEST</inputSchema>
+							<!-- <inputSchema>PUBLIC</inputSchema> -->
 						</database>
 						<target>
 							<packageName>pl.kodolamacz.generated</packageName>
